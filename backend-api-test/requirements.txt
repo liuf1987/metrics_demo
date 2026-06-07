@@ -1,0 +1,8 @@
+pytest==7.4.0
+requests==2.31.0
+pytest-html==4.0.2
+allure-pytest==2.13.2
+python-dotenv==1.0.0
+sqlalchemy==2.0.20
+mysql-connector-python==8.0.33
+pytest-timeout==2.1.0

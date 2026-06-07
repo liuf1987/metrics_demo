@@ -1,0 +1,134 @@
+server:
+  port: 8080
+  servlet:
+    context-path: /api
+
+spring:
+  application:
+    name: metric-platform
+  
+  # MySQL 数据源配置
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://192.168.0.105:3306/metric_platform?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+    username: root
+    password: 1qazZAQ!
+    hikari:
+      minimum-idle: 5
+      maximum-pool-size: 20
+      idle-timeout: 30000
+      max-lifetime: 1800000
+      connection-timeout: 30000
+      pool-name: MetricPlatformHikariCP
+  
+  # Flyway 数据库迁移配置
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+    baseline-version: 0
+    sql-migration-prefix: V
+    sql-migration-separator: __
+    sql-migration-suffixes: .sql
+    encoding: UTF-8
+    validate-on-migrate: false
+    clean-disabled: true
+  
+  # Spring AI 配置 - 阿里云百炼大模型（通过 OpenAI 兼容模式）
+  # 注意：虽然配置键名为 spring.ai.openai，但实际使用的是阿里云百炼大模型服务
+  ai:
+    openai:
+      # 百炼 API Key（需要在阿里云控制台获取）
+      # ⚠️ 重要：这里必须填写 DashScope API Key（格式：sk-xxx），不是 AccessKey
+      # 获取地址：https://dashscope.console.aliyun.com/apiKey
+      # 示例：sk-1a2b3c4d5e6f7g8h9i0j...
+      api-key: ${DASHSCOPE_API_KEY:sk-a26cf23c45cc42bca36eaefe2322ff13}
+      # 百炼兼容 OpenAI 的 API 端点（注意：不要包含 /v1，Spring AI 会自动补全）
+      base-url: ${DASHSCOPE_BASE_URL:https://dashscope.aliyuncs.com/compatible-mode}
+      chat:
+        options:
+#          百炼模型名称可选(除qwen3.5-plus-2026-04-20、deepseek-v4-flash外都剩余100Wtoken)：
+#          qwen3.7-plus
+#          qwen3.6-flash-2026-04-16
+#          qwen3.6-35b-a3b
+#          qwen3.7-max-2026-05-17
+#          qwen3.6-plus-2026-04-02
+#          qwen3.7-max-preview
+#          qwen3.6-max-preview
+#          qwen3.7-max
+#          kimi-k2.6
+#          qwen3.7-max-2026-05-20
+#          deepseek-v4-pro
+#          qwen3.6-27b
+#          gui-plus-2026-02-26
+#          qwen3.5-plus-2026-04-20   token剩余56W
+#          deepseek-v4-flash  token剩余8W
+          model: ${DASHSCOPE_MODEL:deepseek-v4-flash}
+          temperature: 0.7
+          max-tokens: 2000
+
+# 任务队列配置
+task:
+  queue:
+    # 任务轮询间隔（毫秒）
+    poll-interval: 1000
+    # 最大重试次数
+    max-retry-count: 3
+    # 队列键名
+    queue-key: task:queue
+
+# MyBatis-Plus 配置
+mybatis-plus:
+  mapper-locations: classpath*:/mapper/**/*.xml
+  type-aliases-package: com.example.metricplatform.entity
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+  global-config:
+    db-config:
+      id-type: auto
+      logic-delete-field: deleted
+      logic-delete-value: 1
+      logic-not-delete-value: 0
+
+# Springdoc OpenAPI (Swagger) 配置
+springdoc:
+  api-docs:
+    enabled: true
+    path: /v3/api-docs
+  swagger-ui:
+    enabled: true
+    path: /swagger-ui.html
+    tags-sorter: alpha
+    operations-sorter: alpha
+  group-configs:
+    - group: 'default'
+      paths-to-match: '/**'
+      packages-to-scan: com.example.metricplatform.controller
+
+# 日志配置
+logging:
+  level:
+    root: info
+    com.example.metricplatform: debug
+    com.baomidou.mybatisplus: debug
+
+# 元数据配置
+metadata:
+  # 需要排除的表名称清单（这些表不参与指标查询）
+  exclude-tables:
+    - ai_recommendation          
+    - ai_chat_history           
+    - ai_config                 
+    - data_source                
+    - field_metadata             
+    - flyway_schema_history      
+    - metric_category            
+    - metric_collection          
+    - metric_collection_item     
+    - metric_config              
+    - metric_stat_item           
+    - task                        
+    - task_execution_result      
+    - task_metric_item           
+
